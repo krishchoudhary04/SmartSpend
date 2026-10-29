@@ -32,8 +32,12 @@ SmartSpend is a personal expense tracking project that started as a Python comma
 
 ## Project Structure
 
+## Project Structure
+
+```text
 SmartSpend/
 ├── backend/
+│   ├── __init__.py
 │   ├── api.py
 │   ├── database.py
 │   ├── models.py
@@ -48,6 +52,7 @@ SmartSpend/
 ├── .env.example
 ├── .gitignore
 └── README.md
+```
 
 
 ## Getting Started
