@@ -1,5 +1,5 @@
 // Base URL of your running FastAPI server
-const API_BASE_URL = 'http://127.0.0.1:8000';
+const API_BASE_URL = 'https://smartspend-tswc.onrender.com';
 
 // Global application state
 let allExpenses = [];
