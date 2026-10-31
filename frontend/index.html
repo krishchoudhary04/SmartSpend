@@ -1,10 +1,11 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SmartSpend — Expense Tracker</title>
-  
+
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Chart.js CDN -->
@@ -31,268 +32,419 @@
     }
   </script>
 </head>
+
 <body class="bg-slate-50 text-slate-800 min-h-screen font-sans antialiased">
+
+  <!-- Authentication Screen -->
+  <div id="authScreen" class="min-h-screen flex items-center justify-center bg-slate-100 p-4">
+
+    <div class="bg-white p-8 rounded-2xl shadow-lg border border-slate-200 w-full max-w-md">
+
+      <div class="flex justify-center mb-4">
+        <div class="w-14 h-14 rounded-xl bg-brand-600 flex items-center justify-center text-white shadow-md">
+          <i class="fa-solid fa-wallet text-2xl"></i>
+        </div>
+      </div>
+
+      <h1 class="text-2xl font-bold text-center text-slate-900 mb-2">
+        SmartSpend
+      </h1>
+
+      <p class="text-slate-500 text-center text-sm mb-7">
+        Manage your expenses smartly
+      </p>
+
+      <h2 id="authTitle" class="text-xl font-semibold text-slate-800 mb-5">
+        Login
+      </h2>
+
+      <form id="authForm" class="space-y-4">
+
+        <div>
+          <label for="authEmail" class="block text-sm font-medium text-slate-700 mb-1">
+            Email address
+          </label>
+
+          <input
+            type="email"
+            id="authEmail"
+            placeholder="Enter your email"
+            required
+            autocomplete="email"
+            class="w-full border border-slate-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+          />
+        </div>
+
+        <div>
+          <label for="authPassword" class="block text-sm font-medium text-slate-700 mb-1">
+            Password
+          </label>
+
+          <input
+            type="password"
+            id="authPassword"
+            placeholder="Enter your password"
+            required
+            minlength="6"
+            autocomplete="current-password"
+            class="w-full border border-slate-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+          />
+        </div>
+
+        <button
+          type="submit"
+          id="authSubmit"
+          class="w-full bg-brand-600 hover:bg-brand-700 text-white rounded-lg p-3 font-semibold transition"
+        >
+          Login
+        </button>
+
+      </form>
+
+      <p class="text-center mt-6 text-sm text-slate-500">
+        <span id="authSwitchText">Don't have an account?</span>
+
+        <button
+          type="button"
+          id="authSwitch"
+          class="text-brand-600 hover:text-brand-700 font-semibold ml-1"
+        >
+          Sign up
+        </button>
+      </p>
+
+      <p id="authMessage" class="text-center text-sm mt-4"></p>
+
+    </div>
+  </div>
+
+<!-- Main Application -->
+<div id="appContent" class="hidden">
 
   <!-- Top Navigation -->
   <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+
       <div class="flex items-center gap-3">
         <div class="w-10 h-10 rounded-xl bg-brand-600 flex items-center justify-center text-white shadow-md shadow-brand-500/30">
           <i class="fa-solid fa-wallet text-lg"></i>
         </div>
+
         <div>
           <h1 class="text-xl font-bold tracking-tight text-slate-900">SmartSpend</h1>
           <p class="text-xs text-slate-500">Personal Expense Tracker</p>
         </div>
       </div>
 
-      <!-- Backend Connection Status & Add Button -->
-      <div class="flex items-center gap-3">
-        <span id="apiStatus" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
-          <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
-          Checking API...
-        </span>
+      <button
+        id="logoutBtn"
+        class="px-4 py-2 rounded-lg bg-red-500 text-white text-sm font-medium hover:bg-red-600 transition-colors"
+      >
+        <i class="fa-solid fa-right-from-bracket mr-1"></i>
+        Logout
+      </button>
 
-        <button onclick="openModal()" class="inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-4 py-2 rounded-lg shadow-sm transition-all duration-150">
-          <i class="fa-solid fa-plus"></i>
-          <span>Add Expense</span>
-        </button>
-      </div>
     </div>
   </header>
 
-  <!-- Main Container -->
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        <!-- Backend Connection Status & Add Button -->
+        <div class="flex items-center gap-3">
 
-    <!-- KPI / Metric Cards -->
-    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-      <!-- Total Spend -->
-      <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow transition-shadow">
-        <div class="flex items-center justify-between text-slate-500 mb-2">
-          <span class="text-xs font-semibold uppercase tracking-wider">Total Spending</span>
-          <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-sm">
-            <i class="fa-solid fa-indian-rupee-sign"></i>
-          </div>
-        </div>
-        <div class="text-2xl font-bold text-slate-900" id="totalSpendingDisplay">₹0.00</div>
-        <p class="text-xs text-slate-400 mt-1">Cumulative expenses recorded</p>
-      </div>
+          <span id="apiStatus" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
+            <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+            Checking API...
+          </span>
 
-      <!-- Transaction Count -->
-      <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow transition-shadow">
-        <div class="flex items-center justify-between text-slate-500 mb-2">
-          <span class="text-xs font-semibold uppercase tracking-wider">Transactions</span>
-          <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-sm">
-            <i class="fa-solid fa-receipt"></i>
-          </div>
-        </div>
-        <div class="text-2xl font-bold text-slate-900" id="totalTransactionsDisplay">0</div>
-        <p class="text-xs text-slate-400 mt-1">Total transactions logged</p>
-      </div>
+          <button onclick="openModal()" class="inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-4 py-2 rounded-lg shadow-sm transition-all duration-150">
+            <i class="fa-solid fa-plus"></i>
+            <span>Add Expense</span>
+          </button>
 
-      <!-- Top Category -->
-      <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow transition-shadow">
-        <div class="flex items-center justify-between text-slate-500 mb-2">
-          <span class="text-xs font-semibold uppercase tracking-wider">Top Category</span>
-          <div class="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center text-sm">
-            <i class="fa-solid fa-fire"></i>
-          </div>
-        </div>
-        <div class="text-2xl font-bold text-slate-900 truncate" id="topCategoryDisplay">—</div>
-        <p class="text-xs text-slate-400 mt-1" id="topCategoryAmount">Highest expenditure</p>
-      </div>
-
-      <!-- Average Expense -->
-      <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow transition-shadow">
-        <div class="flex items-center justify-between text-slate-500 mb-2">
-          <span class="text-xs font-semibold uppercase tracking-wider">Average Expense</span>
-          <div class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-sm">
-            <i class="fa-solid fa-calculator"></i>
-          </div>
-        </div>
-        <div class="text-2xl font-bold text-slate-900" id="avgExpenseDisplay">₹0.00</div>
-        <p class="text-xs text-slate-400 mt-1">Per transaction average</p>
-      </div>
-    </section>
-
-    <!-- Analytics & Breakdown Section -->
-    <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <!-- Doughnut Chart -->
-      <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col items-center">
-        <div class="w-full flex items-center justify-between mb-4">
-          <h3 class="font-bold text-slate-800">Spending by Category</h3>
-          <span class="text-xs text-slate-400">Distribution</span>
-        </div>
-        <div class="relative w-full max-w-[260px] h-[260px] flex items-center justify-center">
-          <canvas id="categoryChart"></canvas>
-          <div id="noChartData" class="hidden absolute text-xs text-slate-400 text-center">
-            No expenses recorded yet
-          </div>
         </div>
       </div>
+    </header>
 
-      <!-- Category Progress Breakdown -->
-      <div class="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col justify-between">
-        <div class="w-full">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="font-bold text-slate-800">Category Breakdown</h3>
-            <span class="text-xs text-slate-400">Proportional Share</span>
-          </div>
-          <div id="categoryProgressList" class="space-y-4 max-h-[240px] overflow-y-auto pr-2">
-            <p class="text-sm text-slate-400">Loading category details...</p>
-          </div>
-        </div>
-        <p class="text-xs text-slate-400 mt-4 border-t pt-3">
-          Tip: Add descriptive notes to expenses to easily search them later.
-        </p>
-      </div>
-    </section>
 
-    <!-- Expenses Table & Filter Toolbar -->
-    <section class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
-      <!-- Toolbar -->
-      <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
-        <div>
-          <h3 class="font-bold text-slate-900">Recent Transactions</h3>
-          <p class="text-xs text-slate-500">View, search, update, or remove logged expenses</p>
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+      <!-- KPI / Metric Cards -->
+      <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+
+        <!-- Total Spend -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow transition-shadow">
+          <div class="flex items-center justify-between text-slate-500 mb-2">
+            <span class="text-xs font-semibold uppercase tracking-wider">Total Spending</span>
+            <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-sm">
+              <i class="fa-solid fa-indian-rupee-sign"></i>
+            </div>
+          </div>
+          <div class="text-2xl font-bold text-slate-900" id="totalSpendingDisplay">₹0.00</div>
+          <p class="text-xs text-slate-400 mt-1">Cumulative expenses recorded</p>
         </div>
 
-        <div class="flex flex-wrap items-center gap-2">
-          <!-- Search Box -->
-          <div class="relative">
-            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-            <input 
-              type="text" 
-              id="searchInput" 
-              oninput="handleSearch()"
-              placeholder="Search description..." 
-              class="pl-9 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 w-44 sm:w-56"
+        <!-- Transaction Count -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow transition-shadow">
+          <div class="flex items-center justify-between text-slate-500 mb-2">
+            <span class="text-xs font-semibold uppercase tracking-wider">Transactions</span>
+            <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-sm">
+              <i class="fa-solid fa-receipt"></i>
+            </div>
+          </div>
+          <div class="text-2xl font-bold text-slate-900" id="totalTransactionsDisplay">0</div>
+          <p class="text-xs text-slate-400 mt-1">Total transactions logged</p>
+        </div>
+
+        <!-- Top Category -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow transition-shadow">
+          <div class="flex items-center justify-between text-slate-500 mb-2">
+            <span class="text-xs font-semibold uppercase tracking-wider">Top Category</span>
+            <div class="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center text-sm">
+              <i class="fa-solid fa-fire"></i>
+            </div>
+          </div>
+          <div class="text-2xl font-bold text-slate-900 truncate" id="topCategoryDisplay">—</div>
+          <p class="text-xs text-slate-400 mt-1" id="topCategoryAmount">Highest expenditure</p>
+        </div>
+
+        <!-- Average Expense -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow transition-shadow">
+          <div class="flex items-center justify-between text-slate-500 mb-2">
+            <span class="text-xs font-semibold uppercase tracking-wider">Average Expense</span>
+            <div class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-sm">
+              <i class="fa-solid fa-calculator"></i>
+            </div>
+          </div>
+          <div class="text-2xl font-bold text-slate-900" id="avgExpenseDisplay">₹0.00</div>
+          <p class="text-xs text-slate-400 mt-1">Per transaction average</p>
+        </div>
+
+      </section>
+
+
+      <!-- Analytics & Breakdown Section -->
+      <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <!-- Doughnut Chart -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col items-center">
+          <div class="w-full flex items-center justify-between mb-4">
+            <h3 class="font-bold text-slate-800">Spending by Category</h3>
+            <span class="text-xs text-slate-400">Distribution</span>
+          </div>
+
+          <div class="relative w-full max-w-[260px] h-[260px] flex items-center justify-center">
+            <canvas id="categoryChart"></canvas>
+            <div id="noChartData" class="hidden absolute text-xs text-slate-400 text-center">
+              No expenses recorded yet
+            </div>
+          </div>
+        </div>
+
+        <!-- Category Progress Breakdown -->
+        <div class="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col justify-between">
+          <div class="w-full">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="font-bold text-slate-800">Category Breakdown</h3>
+              <span class="text-xs text-slate-400">Proportional Share</span>
+            </div>
+
+            <div id="categoryProgressList" class="space-y-4 max-h-[240px] overflow-y-auto pr-2">
+              <p class="text-sm text-slate-400">Loading category details...</p>
+            </div>
+          </div>
+
+          <p class="text-xs text-slate-400 mt-4 border-t pt-3">
+            Tip: Add descriptive notes to expenses to easily search them later.
+          </p>
+        </div>
+
+      </section>
+
+
+      <!-- Expenses Table & Filter Toolbar -->
+      <section class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+
+        <!-- Toolbar -->
+        <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+
+          <div>
+            <h3 class="font-bold text-slate-900">Recent Transactions</h3>
+            <p class="text-xs text-slate-500">View, search, update, or remove logged expenses</p>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2">
+
+            <!-- Search Box -->
+            <div class="relative">
+              <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+
+              <input
+                type="text"
+                id="searchInput"
+                oninput="handleSearch()"
+                placeholder="Search description..."
+                class="pl-9 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 w-44 sm:w-56"
+              />
+            </div>
+
+            <!-- Category Filter Dropdown -->
+            <select
+              id="categoryFilter"
+              onchange="handleFilterCategory()"
+              class="py-1.5 px-3 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+            >
+              <option value="ALL">All Categories</option>
+            </select>
+
+            <!-- Refresh Button -->
+            <button onclick="fetchAllData()" title="Refresh" class="p-2 text-slate-500 hover:text-slate-800 bg-slate-50 border border-slate-200 rounded-lg text-xs">
+              <i class="fa-solid fa-arrows-rotate"></i>
+            </button>
+
+          </div>
+        </div>
+
+
+        <!-- Table -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm text-slate-600">
+
+            <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider border-b border-slate-200">
+              <tr>
+                <th class="py-3.5 px-5 font-semibold">ID</th>
+                <th class="py-3.5 px-5 font-semibold">Category</th>
+                <th class="py-3.5 px-5 font-semibold">Description</th>
+                <th class="py-3.5 px-5 font-semibold text-right">Amount</th>
+                <th class="py-3.5 px-5 font-semibold text-center">Actions</th>
+              </tr>
+            </thead>
+
+            <tbody id="expensesTableBody" class="divide-y divide-slate-100">
+              <tr>
+                <td colspan="5" class="py-8 text-center text-slate-400 text-sm">
+                  Loading expenses...
+                </td>
+              </tr>
+            </tbody>
+
+          </table>
+        </div>
+
+      </section>
+
+    </main>
+
+
+    <!-- Add/Edit Expense Modal -->
+    <div id="expenseModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
+
+      <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 transform transition-all">
+
+        <div class="flex items-center justify-between border-b pb-3 mb-4">
+          <h3 id="modalTitle" class="text-lg font-bold text-slate-900">Add New Expense</h3>
+
+          <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 text-lg">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <form id="expenseForm" onsubmit="handleFormSubmit(event)" class="space-y-4">
+
+          <input type="hidden" id="expenseId" value="" />
+
+          <!-- Amount -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">
+              Amount (₹)*
+            </label>
+
+            <div class="relative">
+              <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-semibold">₹</span>
+
+              <input
+                type="number"
+                step="0.01"
+                min="0.01"
+                required
+                id="formAmount"
+                placeholder="0.00"
+                class="w-full pl-8 pr-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 font-semibold text-slate-900"
+              />
+            </div>
+          </div>
+
+          <!-- Category -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">
+              Category*
+            </label>
+
+            <input
+              type="text"
+              id="formCategory"
+              list="presetCategories"
+              required
+              placeholder="e.g. Food, Travel, Rent..."
+              class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
             />
+
+            <datalist id="presetCategories">
+              <option value="Food & Dining"></option>
+              <option value="Groceries"></option>
+              <option value="Rent & Housing"></option>
+              <option value="Utilities & Bills"></option>
+              <option value="Travel & Commute"></option>
+              <option value="Shopping"></option>
+              <option value="Entertainment"></option>
+              <option value="Healthcare"></option>
+              <option value="Personal Care"></option>
+            </datalist>
           </div>
 
-          <!-- Category Filter Dropdown -->
-          <select 
-            id="categoryFilter" 
-            onchange="handleFilterCategory()" 
-            class="py-1.5 px-3 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
-          >
-            <option value="ALL">All Categories</option>
-          </select>
+          <!-- Description -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">
+              Description (Optional)
+            </label>
 
-          <!-- Refresh Button -->
-          <button onclick="fetchAllData()" title="Refresh" class="p-2 text-slate-500 hover:text-slate-800 bg-slate-50 border border-slate-200 rounded-lg text-xs">
-            <i class="fa-solid fa-arrows-rotate"></i>
-          </button>
-        </div>
-      </div>
-
-      <!-- Table -->
-      <div class="overflow-x-auto">
-        <table class="w-full text-left text-sm text-slate-600">
-          <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider border-b border-slate-200">
-            <tr>
-              <th class="py-3.5 px-5 font-semibold">ID</th>
-              <th class="py-3.5 px-5 font-semibold">Category</th>
-              <th class="py-3.5 px-5 font-semibold">Description</th>
-              <th class="py-3.5 px-5 font-semibold text-right">Amount</th>
-              <th class="py-3.5 px-5 font-semibold text-center">Actions</th>
-            </tr>
-          </thead>
-          <tbody id="expensesTableBody" class="divide-y divide-slate-100">
-            <tr>
-              <td colspan="5" class="py-8 text-center text-slate-400 text-sm">
-                Loading expenses...
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-  </main>
-
-  <!-- Add/Edit Expense Modal -->
-  <div id="expenseModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 transform transition-all">
-      <div class="flex items-center justify-between border-b pb-3 mb-4">
-        <h3 id="modalTitle" class="text-lg font-bold text-slate-900">Add New Expense</h3>
-        <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 text-lg">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-      </div>
-
-      <form id="expenseForm" onsubmit="handleFormSubmit(event)" class="space-y-4">
-        <input type="hidden" id="expenseId" value="" />
-
-        <!-- Amount -->
-        <div>
-          <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Amount (₹)*</label>
-          <div class="relative">
-            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-semibold">₹</span>
-            <input 
-              type="number" 
-              step="0.01" 
-              min="0.01" 
-              required 
-              id="formAmount" 
-              placeholder="0.00" 
-              class="w-full pl-8 pr-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 font-semibold text-slate-900"
-            />
+            <textarea
+              id="formDescription"
+              rows="2"
+              maxlength="100"
+              placeholder="e.g. Dinner with friends, monthly electric bill..."
+              class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+            ></textarea>
           </div>
-        </div>
 
-        <!-- Category -->
-        <div>
-          <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Category*</label>
-          <input 
-            type="text" 
-            id="formCategory" 
-            list="presetCategories" 
-            required 
-            placeholder="e.g. Food, Travel, Rent..." 
-            class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
-          />
-          <datalist id="presetCategories">
-            <option value="Food & Dining"></option>
-            <option value="Groceries"></option>
-            <option value="Rent & Housing"></option>
-            <option value="Utilities & Bills"></option>
-            <option value="Travel & Commute"></option>
-            <option value="Shopping"></option>
-            <option value="Entertainment"></option>
-            <option value="Healthcare"></option>
-            <option value="Personal Care"></option>
-          </datalist>
-        </div>
+          <!-- Submit & Cancel Buttons -->
+          <div class="flex items-center justify-end gap-3 pt-3 border-t">
 
-        <!-- Description -->
-        <div>
-          <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Description (Optional)</label>
-          <textarea 
-            id="formDescription" 
-            rows="2" 
-            maxlength="100" 
-            placeholder="e.g. Dinner with friends, monthly electric bill..." 
-            class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
-          ></textarea>
-        </div>
+            <button type="button" onclick="closeModal()" class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg">
+              Cancel
+            </button>
 
-        <!-- Submit & Cancel Buttons -->
-        <div class="flex items-center justify-end gap-3 pt-3 border-t">
-          <button type="button" onclick="closeModal()" class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg">
-            Cancel
-          </button>
-          <button type="submit" id="saveBtn" class="px-5 py-2 text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 rounded-lg shadow-sm">
-            Save Expense
-          </button>
-        </div>
-      </form>
+            <button type="submit" id="saveBtn" class="px-5 py-2 text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 rounded-lg shadow-sm">
+              Save Expense
+            </button>
+
+          </div>
+        </form>
+      </div>
     </div>
-  </div>
 
-  <!-- Toast Notification Container -->
-  <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2"></div>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2"></div>
+
+  </div>
+  <!-- End Main Application -->
+
+
+  <!-- Supabase Authentication Library -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <!-- Application Logic JS -->
   <script src="app.js"></script>
+
 </body>
 </html>
