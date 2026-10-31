@@ -258,7 +258,7 @@ async function fetchAllExpenses() {
 
     tbody.innerHTML = `
       <tr>
-        <td colspan="5" class="py-8 text-center text-red-500 text-sm">
+        <td colspan="4" class="py-8 text-center text-red-500 text-sm">
           <i class="fa-solid fa-triangle-exclamation mr-1"></i>
           Failed to connect to server at <code>${API_BASE_URL}</code>
         </td>
@@ -283,7 +283,7 @@ function renderExpensesTable(expenses) {
   if (!expenses || expenses.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="5" class="py-12 text-center text-slate-400">
+        <td colspan="4" class="py-12 text-center text-slate-400">
           <i class="fa-regular fa-folder-open text-3xl mb-2 block text-slate-300"></i>
           No expenses found. Click <strong>"Add Expense"</strong> to log your first spend!
         </td>
