@@ -1,20 +1,25 @@
 # SmartSpend — Personal Expense Tracker
 
-SmartSpend is a personal expense tracking project that started as a Python command-line application and evolved into a web application with a FastAPI backend, PostgreSQL database, and interactive frontend.
+SmartSpend is a full-stack personal expense tracking application built to manage expenses securely and visualize spending. It started as a Python command-line application and evolved into a web application powered by FastAPI, PostgreSQL, and an interactive frontend.
+
+**Live Website:** https://smartspend-frontend-0i17.onrender.com  
+**Backend API Documentation:** https://smartspend-tswc.onrender.com/docs
 
 ## Features
 
 ### Full-Stack Web Application
+- User signup, login, email verification, and logout
+- Secure, account-specific expense management
 - Add, view, update, and delete expenses
 - Calculate total spending
 - View category-wise spending summaries
 - Filter expenses by category
 - Store expense records in PostgreSQL using Supabase
-- Validate input and handle API errors
 - Interactive dashboard connected to the backend
+- Input validation and API error handling
 
 ### Original CLI Application
-- Manage expenses through a terminal menu
+- Manage expenses through a terminal-based menu
 - Add, view, edit, and delete expenses
 - Calculate total and category-wise spending
 - Save and load data using JSON
@@ -22,15 +27,18 @@ SmartSpend is a personal expense tracking project that started as a Python comma
 
 ## Tech Stack
 
-- **Backend:** Python, FastAPI
-- **Database:** PostgreSQL (Supabase)
-- **ORM:** SQLAlchemy
-- **Validation:** Pydantic
-- **Frontend:** HTML, CSS, JavaScript
-- **Original CLI Storage:** JSON
-- **API Documentation:** FastAPI / Swagger UI
-
-## Project Structure
+| Component | Technologies |
+|---|---|
+| Backend | Python, FastAPI |
+| Database | PostgreSQL, Supabase |
+| ORM | SQLAlchemy |
+| Validation | Pydantic |
+| Authentication | Supabase Auth |
+| Frontend | HTML, Tailwind CSS, JavaScript |
+| Visualization | Chart.js |
+| CLI Storage | JSON |
+| Deployment | Render |
+| API Documentation | FastAPI / Swagger UI |
 
 ## Project Structure
 
@@ -39,91 +47,111 @@ SmartSpend/
 ├── backend/
 │   ├── __init__.py
 │   ├── api.py
+│   ├── auth.py
 │   ├── database.py
 │   ├── models.py
-│   ├── schemas.py
-│   └── test_connection.py
+│   └── schemas.py
 ├── frontend/
 │   ├── index.html
 │   └── app.js
 ├── cli_version/
-│   ├── main.py
-│   └── expenses.json
+├── requirements.txt
 ├── .env.example
 ├── .gitignore
 └── README.md
 ```
 
-
 ## Getting Started
 
 ### 1. Clone the repository
 
+```bash
 git clone https://github.com/krishchoudhary04/SmartSpend.git
 cd SmartSpend
-
+```
 
 ### 2. Install dependencies
 
-Create and activate a virtual environment if desired, then install the Python packages used by the backend:
+Create and activate a virtual environment, then install the backend dependencies:
 
-pip install fastapi "uvicorn[standard]" sqlalchemy psycopg2-binary python-dotenv
+```bash
+python -m venv venv
+```
 
+Activate it on Windows:
 
-Install any additional packages required by your project.
+```bash
+venv\Scripts\activate
+```
 
-### 3. Configure the database
+Install the requirements:
+
+```bash
+pip install -r requirements.txt
+```
+
+### 3. Configure environment variables
 
 - Create or configure a PostgreSQL database using Supabase.
-- Copy '.env.example' to '.env'.
-- Add your own database connection string to '.env'.
-- Never commit your '.env' file or expose database credentials.
+- Copy `.env.example` to `.env`.
+- Add the required database and Supabase configuration using the variable names provided in `.env.example`.
+- Never commit `.env` or expose secret credentials.
 
 ### 4. Start the backend
 
 Run this command from the project root:
 
-
+```bash
 python -m uvicorn backend.api:app --reload
-
+```
 
 Open the API documentation:
 
 http://127.0.0.1:8000/docs
 
-### 5. Open the frontend
+### 5. Run the frontend locally
 
-Open 'frontend/index.html' in a browser or serve the frontend using a local development server. Keep the backend running while using the dashboard.
+Open the `frontend` folder using a local development server, such as VS Code Live Server.
 
-### 6. Run the original CLI version
+Keep the backend running while using the dashboard. Make sure the frontend's Supabase and API configuration is set correctly for your local environment.
 
+## Optional: Run the Original CLI Version
 
+```bash
 cd cli_version
 python main.py
+```
 
 The CLI application automatically creates 'expenses.json' when expenses are saved, if the file does not already exist. This file stores expense records in JSON format.
- An example 'expenses.json' file is included in the repository to demonstrate the expected data format.
+ An example 'expenses.json' file is included in the repository to demonstrate the expected data format.
+
+## Deployment
+
+SmartSpend is deployed using:
+
+- **Frontend:** Render Static Site
+- **Backend:** Render Web Service
+- **Database and Authentication:** Supabase
+
+Visit the live application:  
+https://smartspend-frontend-0i17.onrender.com
 
 ## What I Learned
 
 - Building REST APIs using FastAPI
 - Implementing CRUD operations
 - Connecting Python applications to PostgreSQL
-- Using SQLAlchemy for database queries
+- Using SQLAlchemy for database operations
 - Validating requests with Pydantic
+- Implementing authentication and authorization
 - Connecting a frontend to a backend API
-- Handling errors and organizing a multi-folder project
-- Practising Python fundamentals through the original CLI application
-
-## Future Improvements
-
-- Deploy the frontend and backend publicly
-- Add user authentication
-- Improve dashboard analytics and visualizations
-- Add automated tests and more robust error handling
+- Handling user-specific data and API errors
+- Deploying a full-stack application
+- Organizing a multi-folder project
 
 ---
 
 **Project:** SmartSpend  
-**Author:** [krishchoudhary04](https://github.com/krishchoudhary04)
+**Author:** [krishchoudhary04](https://github.com/krishchoudhary04)  
+**GitHub Repository:** https://github.com/krishchoudhary04/SmartSpend
 
