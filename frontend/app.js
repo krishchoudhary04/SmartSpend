@@ -297,7 +297,6 @@ function renderExpensesTable(expenses) {
 
     return `
       <tr class="hover:bg-slate-50/80 transition-colors">
-        <td class="py-3 px-5 text-xs font-mono text-slate-400">#${expense.id}</td>
         <td class="py-3 px-5">
           <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${catStyle.bg} ${catStyle.text} border ${catStyle.border}">
             ${escapeHtml(expense.category)}
