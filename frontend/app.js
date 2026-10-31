@@ -1,17 +1,132 @@
-// Base URL of your running FastAPI server
-const API_BASE_URL = 'https://smartspend-tswc.onrender.com';
+// Base URL of your FastAPI server (local or deployed)
+const API_BASE_URL =
+    window.location.hostname === "127.0.0.1" ||
+    window.location.hostname === "localhost"
+        ? "http://127.0.0.1:8000"
+        : "https://smartspend-tswc.onrender.com";
+
+// Supabase Configuration
+const SUPABASE_URL = 'https://jstwjjrwatvzwccaoohj.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_oV7O0LeN6iqCpL0sIycTDg_e6HzQIhr';
+
+const supabaseClient = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_PUBLISHABLE_KEY
+);
+
+let isLoginMode = true;
+
+// Authenticated API request helper
+async function apiFetch(url, options = {}) {
+  const { data: { session }, error } =
+    await supabaseClient.auth.getSession();
+
+  if (error || !session) {
+    throw new Error('Please login to continue.');
+  }
+
+  return fetch(url, {
+    ...options,
+    headers: {
+      ...options.headers,
+      Authorization: `Bearer ${session.access_token}`
+    }
+  });
+}
+
+// Switch between Login and Signup
+document.getElementById('authSwitch').addEventListener('click', () => {
+  isLoginMode = !isLoginMode;
+
+  document.getElementById('authTitle').textContent =
+    isLoginMode ? 'Login' : 'Create Account';
+
+  document.getElementById('authSubmit').textContent =
+    isLoginMode ? 'Login' : 'Sign Up';
+
+  document.getElementById('authSwitchText').textContent =
+    isLoginMode ? "Don't have an account?" : 'Already have an account?';
+
+  document.getElementById('authSwitch').textContent =
+    isLoginMode ? 'Sign Up' : 'Login';
+
+  document.getElementById('authMessage').textContent = '';
+});
+
+// Login / Signup
+document.getElementById('authForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const email = document.getElementById('authEmail').value;
+  const password = document.getElementById('authPassword').value;
+  const message = document.getElementById('authMessage');
+  const submitBtn = document.getElementById('authSubmit');
+
+  submitBtn.disabled = true;
+  message.textContent = 'Please wait...';
+
+  try {
+    let result;
+
+    if (isLoginMode) {
+      result = await supabaseClient.auth.signInWithPassword({
+        email,
+        password
+      });
+    } else {
+      result = await supabaseClient.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/index.html`
+        }
+      });
+    }
+
+    if (result.error) {
+      throw result.error;
+    }
+
+    if (!isLoginMode && !result.data.session) {
+      message.textContent = 'Account created! Please verify your email.';
+    } else {
+      message.textContent = isLoginMode
+        ? 'Login successful! Authentication is working.'
+        : 'Account created and authenticated successfully!';
+    }
+
+  } catch (error) {
+    message.textContent = error.message;
+  } finally {
+    submitBtn.disabled = false;
+  }
+});
+
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+    const { error } = await supabaseClient.auth.signOut();
+
+    if (error) {
+        alert(error.message);
+        return;
+    }
+
+    showToast('Logged out successfully!');
+});
 
 // Global application state
 let allExpenses = [];
 let categoryChart = null;
 
-// Currency symbol helper (change to '$', '€', etc. if needed)
+// Currency symbol helper
 const CURRENCY = '₹';
 
 // Format currency
 function formatCurrency(num) {
   const value = parseFloat(num) || 0;
-  return `${CURRENCY}${value.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  return `${CURRENCY}${value.toLocaleString('en-IN', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  })}`;
 }
 
 // Category color and badge mapper
@@ -29,9 +144,11 @@ const CATEGORY_COLORS = {
 
 function getCategoryColor(categoryName = '') {
   const lower = (categoryName || '').toLowerCase();
+
   for (const key of Object.keys(CATEGORY_COLORS)) {
     if (lower.includes(key)) return CATEGORY_COLORS[key];
   }
+
   return CATEGORY_COLORS['default'];
 }
 
@@ -52,12 +169,10 @@ function showToast(message, type = 'success') {
 
   container.appendChild(toast);
 
-  // Animate in
   setTimeout(() => {
     toast.classList.remove('translate-y-2', 'opacity-0');
   }, 10);
 
-  // Auto remove
   setTimeout(() => {
     toast.classList.add('opacity-0', 'translate-y-2');
     setTimeout(() => toast.remove(), 300);
@@ -70,8 +185,12 @@ function showToast(message, type = 'success') {
 
 async function checkApiHealth() {
   const statusEl = document.getElementById('apiStatus');
+
   try {
-    const res = await fetch(`${API_BASE_URL}/expenses`, { method: 'GET' });
+    const res = await apiFetch(`${API_BASE_URL}/expenses`, {
+      method: 'GET'
+    });
+
     if (res.ok) {
       statusEl.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200';
       statusEl.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500"></span> Backend Connected';
@@ -81,6 +200,7 @@ async function checkApiHealth() {
     statusEl.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-rose-50 text-rose-700 border border-rose-200';
     statusEl.innerHTML = '<span class="w-2 h-2 rounded-full bg-rose-500"></span> Backend Offline (Port 8000)';
   }
+
   return false;
 }
 
@@ -88,11 +208,12 @@ async function checkApiHealth() {
 async function fetchSummaries() {
   try {
     const [totalRes, categoryRes] = await Promise.all([
-      fetch(`${API_BASE_URL}/expenses/summary/total`),
-      fetch(`${API_BASE_URL}/expenses/summary/category`)
+      apiFetch(`${API_BASE_URL}/expenses/summary/total`),
+      apiFetch(`${API_BASE_URL}/expenses/summary/category`)
     ]);
 
     let total = 0;
+
     if (totalRes.ok) {
       const data = await totalRes.json();
       total = parseFloat(data.total_spending) || 0;
@@ -104,6 +225,7 @@ async function fetchSummaries() {
       updateCategoryAnalytics(catData, total);
       updateCategoryFilterDropdown(catData);
     }
+
   } catch (error) {
     console.error('Error fetching summaries:', error);
   }
@@ -112,26 +234,33 @@ async function fetchSummaries() {
 // Fetch all expenses
 async function fetchAllExpenses() {
   const tbody = document.getElementById('expensesTableBody');
+
   try {
-    const res = await fetch(`${API_BASE_URL}/expenses`);
+    const res = await apiFetch(`${API_BASE_URL}/expenses`);
+
     if (!res.ok) throw new Error('Failed to load expenses');
-    
+
     allExpenses = await res.json();
 
     // Update KPI counters
     document.getElementById('totalTransactionsDisplay').textContent = allExpenses.length;
+
     const avg = allExpenses.length > 0
       ? (allExpenses.reduce((sum, item) => sum + parseFloat(item.amount), 0) / allExpenses.length)
       : 0;
+
     document.getElementById('avgExpenseDisplay').textContent = formatCurrency(avg);
 
     renderExpensesTable(allExpenses);
+
   } catch (error) {
     console.error('Error:', error);
+
     tbody.innerHTML = `
       <tr>
         <td colspan="5" class="py-8 text-center text-red-500 text-sm">
-          <i class="fa-solid fa-triangle-exclamation mr-1"></i> Failed to connect to server at <code>${API_BASE_URL}</code>
+          <i class="fa-solid fa-triangle-exclamation mr-1"></i>
+          Failed to connect to server at <code>${API_BASE_URL}</code>
         </td>
       </tr>
     `;
@@ -165,6 +294,7 @@ function renderExpensesTable(expenses) {
 
   tbody.innerHTML = expenses.map(expense => {
     const catStyle = getCategoryColor(expense.category);
+
     return `
       <tr class="hover:bg-slate-50/80 transition-colors">
         <td class="py-3 px-5 text-xs font-mono text-slate-400">#${expense.id}</td>
@@ -181,16 +311,16 @@ function renderExpensesTable(expenses) {
         </td>
         <td class="py-3 px-5 text-center">
           <div class="inline-flex items-center gap-1.5">
-            <button 
-              onclick="editExpense(${expense.id})" 
-              title="Edit" 
+            <button
+              onclick="editExpense(${expense.id})"
+              title="Edit"
               class="w-7 h-7 flex items-center justify-center text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors text-xs"
             >
               <i class="fa-solid fa-pen-to-square"></i>
             </button>
-            <button 
-              onclick="deleteExpense(${expense.id})" 
-              title="Delete" 
+            <button
+              onclick="deleteExpense(${expense.id})"
+              title="Delete"
               class="w-7 h-7 flex items-center justify-center text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors text-xs"
             >
               <i class="fa-solid fa-trash-can"></i>
@@ -210,7 +340,9 @@ function updateCategoryAnalytics(categoryData, totalSpend) {
     progressContainer.innerHTML = '<p class="text-xs text-slate-400">No category breakdown available yet.</p>';
     document.getElementById('topCategoryDisplay').textContent = '—';
     document.getElementById('topCategoryAmount').textContent = 'Highest expenditure';
+
     if (categoryChart) categoryChart.destroy();
+
     noChart.classList.remove('hidden');
     return;
   }
@@ -218,24 +350,34 @@ function updateCategoryAnalytics(categoryData, totalSpend) {
   noChart.classList.add('hidden');
 
   // Sort descending by total_spending
-  const sorted = [...categoryData].sort((a, b) => parseFloat(b.total_spending) - parseFloat(a.total_spending));
+  const sorted = [...categoryData].sort(
+    (a, b) => parseFloat(b.total_spending) - parseFloat(a.total_spending)
+  );
 
   // Top category card
   const top = sorted[0];
+
   document.getElementById('topCategoryDisplay').textContent = top.category;
-  document.getElementById('topCategoryAmount').textContent = `${formatCurrency(top.total_spending)} spent`;
+  document.getElementById('topCategoryAmount').textContent =
+    `${formatCurrency(top.total_spending)} spent`;
 
   // Progress bars
   progressContainer.innerHTML = sorted.map(item => {
     const itemTotal = parseFloat(item.total_spending) || 0;
-    const percentage = totalSpend > 0 ? ((itemTotal / totalSpend) * 100).toFixed(1) : 0;
+    const percentage = totalSpend > 0
+      ? ((itemTotal / totalSpend) * 100).toFixed(1)
+      : 0;
+
     const color = getCategoryColor(item.category).hex;
 
     return `
       <div>
         <div class="flex justify-between items-center text-xs mb-1">
           <span class="font-medium text-slate-700">${escapeHtml(item.category)}</span>
-          <span class="font-semibold text-slate-900">${formatCurrency(itemTotal)} <span class="text-slate-400 font-normal">(${percentage}%)</span></span>
+          <span class="font-semibold text-slate-900">
+            ${formatCurrency(itemTotal)}
+            <span class="text-slate-400 font-normal">(${percentage}%)</span>
+          </span>
         </div>
         <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
           <div class="h-full rounded-full transition-all duration-500" style="width: ${percentage}%; background-color: ${color};"></div>
@@ -277,8 +419,9 @@ function updateCategoryAnalytics(categoryData, totalSpend) {
 function updateCategoryFilterDropdown(categories) {
   const select = document.getElementById('categoryFilter');
   const currentVal = select.value;
+
   select.innerHTML = '<option value="ALL">All Categories</option>';
-  
+
   categories.forEach(item => {
     const opt = document.createElement('option');
     opt.value = item.category;
@@ -295,17 +438,22 @@ function updateCategoryFilterDropdown(categories) {
 
 async function handleFilterCategory() {
   const selected = document.getElementById('categoryFilter').value;
+
   if (selected === 'ALL') {
     renderExpensesTable(allExpenses);
     return;
   }
 
   try {
-    const res = await fetch(`${API_BASE_URL}/expenses/category/${encodeURIComponent(selected)}`);
+    const res = await apiFetch(
+      `${API_BASE_URL}/expenses/category/${encodeURIComponent(selected)}`
+    );
+
     if (res.ok) {
       const filtered = await res.json();
       renderExpensesTable(filtered);
     }
+
   } catch (err) {
     console.error('Filter error:', err);
   }
@@ -313,12 +461,13 @@ async function handleFilterCategory() {
 
 function handleSearch() {
   const query = document.getElementById('searchInput').value.trim().toLowerCase();
+
   if (!query) {
     renderExpensesTable(allExpenses);
     return;
   }
 
-  const filtered = allExpenses.filter(exp => 
+  const filtered = allExpenses.filter(exp =>
     (exp.description && exp.description.toLowerCase().includes(query)) ||
     (exp.category && exp.category.toLowerCase().includes(query))
   );
@@ -333,7 +482,7 @@ function handleSearch() {
 function openModal(isEdit = false) {
   const modal = document.getElementById('expenseModal');
   const title = document.getElementById('modalTitle');
-  
+
   if (!isEdit) {
     document.getElementById('expenseForm').reset();
     document.getElementById('expenseId').value = '';
@@ -351,6 +500,7 @@ function closeModal() {
 
 function editExpense(id) {
   const expense = allExpenses.find(e => e.id === id);
+
   if (!expense) return;
 
   document.getElementById('expenseId').value = expense.id;
@@ -370,12 +520,16 @@ async function handleFormSubmit(e) {
   const description = document.getElementById('formDescription').value.trim() || null;
 
   const payload = { amount, category, description };
+
   const isEdit = Boolean(id);
-  const url = isEdit ? `${API_BASE_URL}/expenses/${id}` : `${API_BASE_URL}/expenses`;
+  const url = isEdit
+    ? `${API_BASE_URL}/expenses/${id}`
+    : `${API_BASE_URL}/expenses`;
+
   const method = isEdit ? 'PUT' : 'POST';
 
   try {
-    const res = await fetch(url, {
+    const res = await apiFetch(url, {
       method: method,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
@@ -387,8 +541,15 @@ async function handleFormSubmit(e) {
     }
 
     closeModal();
-    showToast(isEdit ? 'Expense updated successfully!' : 'Expense added successfully!');
+
+    showToast(
+      isEdit
+        ? 'Expense updated successfully!'
+        : 'Expense added successfully!'
+    );
+
     await fetchAllData();
+
   } catch (error) {
     alert(error.message);
   }
@@ -398,15 +559,17 @@ async function deleteExpense(id) {
   if (!confirm('Are you sure you want to delete this expense?')) return;
 
   try {
-    // Note: Calling singular /expense/{id} as defined in api.py
-    const res = await fetch(`${API_BASE_URL}/expense/${id}`, {
+    // Calling singular /expense/{id} as defined in api.py
+    const res = await apiFetch(`${API_BASE_URL}/expense/${id}`, {
       method: 'DELETE'
     });
 
     if (!res.ok) throw new Error('Failed to delete expense');
 
     showToast('Expense removed successfully');
+
     await fetchAllData();
+
   } catch (error) {
     alert(error.message);
   }
@@ -415,6 +578,7 @@ async function deleteExpense(id) {
 // Security: Escape HTML to avoid XSS
 function escapeHtml(text) {
   if (!text) return '';
+
   return String(text)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -423,7 +587,40 @@ function escapeHtml(text) {
     .replace(/'/g, '&#039;');
 }
 
-// Initialize on page load
-window.addEventListener('DOMContentLoaded', () => {
-  fetchAllData();
+// Show the correct screen based on authentication
+function updateAuthScreen(session) {
+  const authScreen = document.getElementById('authScreen');
+  const appContent = document.getElementById('appContent');
+
+  if (session) {
+    authScreen.classList.add('hidden');
+    appContent.classList.remove('hidden');
+  } else {
+    authScreen.classList.remove('hidden');
+    appContent.classList.add('hidden');
+  }
+}
+
+// Restore session and listen for login/logout changes
+window.addEventListener('DOMContentLoaded', async () => {
+  const { data: { session }, error } =
+    await supabaseClient.auth.getSession();
+
+  if (error) {
+    console.error('Session error:', error.message);
+  }
+
+  updateAuthScreen(session);
+
+  if (session) {
+    fetchAllData();
+  }
+
+  supabaseClient.auth.onAuthStateChange((event, session) => {
+    updateAuthScreen(session);
+
+    if (event === 'SIGNED_IN') {
+      fetchAllData();
+    }
+  });
 });
