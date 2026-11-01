@@ -191,17 +191,27 @@ async function checkApiHealth() {
       method: 'GET'
     });
 
-    if (res.ok) {
-      statusEl.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200';
-      statusEl.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500"></span> Backend Connected';
-      return true;
+    if (!res.ok) {
+      throw new Error(`Server responded with ${res.status}`);
     }
-  } catch (err) {
-    statusEl.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-rose-50 text-rose-700 border border-rose-200';
-    statusEl.innerHTML = '<span class="w-2 h-2 rounded-full bg-rose-500"></span> Backend Offline (Port 8000)';
-  }
 
-  return false;
+    statusEl.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200';
+
+    statusEl.innerHTML =
+      '<span class="w-2 h-2 rounded-full bg-emerald-500"></span> Backend Connected';
+
+    return true;
+
+  } catch (err) {
+    console.error('Backend connection error:', err);
+
+    statusEl.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-rose-50 text-rose-700 border border-rose-200';
+
+    statusEl.innerHTML =
+      '<span class="w-2 h-2 rounded-full bg-rose-500"></span> Backend Offline';
+
+    return false;
+  }
 }
 
 // Fetch total spend and category summaries
